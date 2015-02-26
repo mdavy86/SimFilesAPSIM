@@ -9,7 +9,7 @@ library(XML)
 setwd = "C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\marcus\\"
 
 # Select Met folder locations (to read weather data from)
-metFolder = getwd
+metFolder = getwd()
 
 # Base sim
 baseSimFolder = "C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\marcus\\baseSim"
