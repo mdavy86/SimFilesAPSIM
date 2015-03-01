@@ -1,5 +1,5 @@
-# reads a "base" sim file (XML) 
-# finds out a list of met files to run 
+# reads a "base" sim file (XML)
+# finds out a list of met files to run
 # Creates multiple sim files pointing out to these met files
 # Change some info in XMLs (e.g. dates and hybrids)
 
@@ -43,7 +43,7 @@ length(metFiles)
 # get data from the root (base) .sim file
 #doc = xmlInternalTreeParse(rootSimFile)
 doc = xmlTreeParse(rootSimFile, useInternalNodes = TRUE)
-nodesMet = getNodeSet(doc, "//filename") 
+nodesMet = getNodeSet(doc, "//filename")
 nodesOut = getNodeSet(doc, "//outputfile")
 nodesStDate = getNodeSet(doc, "//start_date")
 nodesEnDate = getNodeSet(doc, "//end_date")
@@ -58,31 +58,31 @@ climates = c("base", "fut1")
 cultivars = c("short", "long")
 
 for(cl in 1:length(climates)){
-  
+
   for (cv in 1:length(cultivars)) {
-    
+
     # print(c(climates[cl], cultivars[cv]))
-    
+
     # change cultivar FIXME: it's change cultivars of all crops!
-    lapply(nodesCV, function(n) {     
-      for (i in 1:length(cultivars)) {
-        if(xmlValue(n) == cultivars[i]) # only change names if crop has these cultivars
+    lapply(nodesCV, function(n) {
+      for (i in 1:length(cultivars)) {  ## only change names if crop has these cultivars
+        if(xmlValue(n) == cultivars[i])
           xmlValue(n) = cultivars[cv]
       }
     })
-    
+
     # choose dates for the current climate scenario
     if(climates[cl] == "base") {
-      
+
       stDate = "01/01/1971"
       enDate = "01/01/2000"
-      
+
     } else {
-      
+
       stDate = "01/01/2069"
       enDate = "01/01/2099"
     }
-    
+
     # change scenario
     lapply(nodesStDate, function(n) {
       xmlValue(n) = stDate
@@ -90,7 +90,7 @@ for(cl in 1:length(climates)){
     lapply(nodesEnDate, function(n) {
       xmlValue(n) = enDate
     })
-    
+
     # # Loop through met file names to create one .sim file for each met file
     for(i in seq_along(metFiles)) {
       #for(i in 1:10) { # For testing
@@ -100,26 +100,26 @@ for(cl in 1:length(climates)){
      # simName = paste(splitName[1],".sim", sep = "")
       gridName = splitName[1]
       outName = paste(gridName, "_", climates[cl],"_", soils, "_", cultivars[cv],".out", sep = "")
-      
-      # change attribute name of simulation 
+
+      # change attribute name of simulation
       xmlAttrs(simNameRoot) = c(name = splitName[1])
-      
+
       #  find address to point out to right met files
       newMetNode = paste(metFolder,metName,sep ="")
-      
+
       # change met location
       lapply(nodesMet, function(n) {
         xmlValue(n) = newMetNode
       })
-      
+
       # change outfile name
       lapply(nodesOut, function(n) {
         xmlValue(n) = outName
       })
-      
+
       # FIXME: identation of saved XML file is corrupted when it has text but no problem with functionality
       saveXML(doc, file = paste(simFolder, gridName, "_", climates[cl],"_", soils, "_", cultivars[cv], ".sim", sep = ""), indent=TRUE)
-      
+
     }  # END MET FILES
   } # END LOOP CULTIVARS
  } # END LOOP CLIMATES
