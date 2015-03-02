@@ -1,68 +1,73 @@
 #!/bin/env Rscript
 
-# Reads a 'base' sim file (XML) finds out a list of met files to run
-# Creates multiple sim files pointing out to these met files Change
-# some info in XMLs (e.g. dates and hybrids)
+## Reads a 'base' sim file (XML) finds out a list of met files to run
+## Creates multiple sim files pointing out to these met files Change
+## some info in XMLs (e.g. dates and hybrids)
 
 library(XML)
 
-# Set folder locations
-setwd = "C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\marcus\\"
+## Set folder locations
+## setwd() should be set to the relative location where of the source file.
+## RStudio: Session => "Set Working directory" => "To source file location"
 
-# Select Met folder locations (to read weather data from)
-metFolder = getwd()
 
-# Base sim
-baseSimFolder = "C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\marcus\\baseSim"
+## Select Met folder locations
+metFolder     <- file.path(getwd(), "metFiles")
+## Base sim
+baseSimFolder <- file.path(getwd(), "baseSim")
+## Output place for new sim files
+simFolder     <- file.path(getwd(), "newSims")
 
-# Output place for new sim files
-simFolder = "C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\marcus"
 
-# Define soil type names
-soilTypes = c("high", "low")
+## Define soil type names
+soilTypes     <- c("high", "low")
+
 
 for (so in 1:length(soilTypes)) {
-  soils = soilTypes[so]
-  rootSimFile = paste0(baseSimFolder, soils, ".sim")  #'C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\simFiles\\baseSim\\HigWHCSim.sim'
+  soils       <- soilTypes[so]
+  rootSimFile <- file.path(baseSimFolder, paste0(soils, ".sim"))  ## 'C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\simFiles\\baseSim\\HigWHCSim.sim'
 
-  # rootSimFile =
+  # rootSimFile <-
   # 'C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\simFiles\\baseSim\\HigWHCSim.sim'
-  # soils = 'high' # as .sim above
+  # soils <- 'high' # as .sim above
 
-  # rootSimFile =
+  # rootSimFile <-
   # 'C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\simFiles\\baseSim\\LowWHCSim.sim'
-  # soils = 'low' # as .sim above
+  # soils <- 'low' # as .sim above
 
   print(paste0("Running: ", rootSimFile))
 
-  # finds out met files to point to metFiles =
-  # list.files(metFolder,pattern='.met', full.names=FALSE) # Option 1:
-  # gets all met files in a folder
+  ## finds out met files to point to metFiles =
+  ## list.files(metFolder,pattern='.met', full.names=FALSE) # Option 1:
+  ## gets all met files in a folder
   # load('C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\filter\\Filter_ArableKaituna.RData',
   # .GlobalEnv) # Option 2: gets a list of grid-cell/files selected
-  # (LU layer in this case)
-  load("C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\source\\filtersAnneGaelle\\Filter_LU_metList.RData",
-       .GlobalEnv)  # Filter for all Kaituna minus lakes (AnneGaelle-BiomaBGC)
+  ## (LU layer in this case)
 
-  metFiles = metList
+  # load("C:\\Apsim_dev\\Projects\\CCII\\RA2_CaseStudy\\source\\filtersAnneGaelle\\Filter_LU_metList.RData",
+  #     .GlobalEnv)  # Filter for all Kaituna minus lakes (AnneGaelle-BiomaBGC)
+  # metFiles <- metList
+
+  metFiles <- list.files(metFolder, pattern='.met', full.names=FALSE)
+
   length(metFiles)
 
-  # get data from the root (base) .sim file doc =
-  # xmlInternalTreeParse(rootSimFile)
-  doc = xmlTreeParse(rootSimFile, useInternalNodes = TRUE)
-  nodesMet = getNodeSet(doc, "//filename")
-  nodesOut = getNodeSet(doc, "//outputfile")
-  nodesStDate = getNodeSet(doc, "//start_date")
-  nodesEnDate = getNodeSet(doc, "//end_date")
-  nodesCV = getNodeSet(doc, "//CultivarName")
+  ## get data from the root (base) .sim file doc =
+  ## xmlInternalTreeParse(rootSimFile)
+  doc         <- xmlTreeParse(rootSimFile, useInternalNodes = TRUE)
+  nodesMet    <- getNodeSet(doc, "//filename")
+  nodesOut    <- getNodeSet(doc, "//outputfile")
+  nodesStDate <- getNodeSet(doc, "//start_date")
+  nodesEnDate <- getNodeSet(doc, "//end_date")
+  nodesCV     <- getNodeSet(doc, "//CultivarName")
 
-  simNameRoot = xmlRoot(doc)
+  simNameRoot <- xmlRoot(doc)
 
-  # Select the climate scanario names to run (!!!!! Atention !!!!!)
-  # loop across cvs and climates
-  climates = c("base", "fut1")
-  # climates = 'fut1'
-  cultivars = c("short", "long")
+  ## Select the climate scanario names to run (!!!!! Atention !!!!!)
+  ## loop across cvs and climates
+  climates   <- c("base", "fut1")
+  # climates <- 'fut1'
+  cultivars  <- c("short", "long")
 
   for (cl in 1:length(climates)) {
 
@@ -75,65 +80,64 @@ for (so in 1:length(soilTypes)) {
         for (i in 1:length(cultivars)) {
           ## only change names if crop has these cultivars
           if (xmlValue(n) == cultivars[i])
-            xmlValue(n) = cultivars[cv]
+            xmlValue(n) <- cultivars[cv]
         }
       })
 
-      # choose dates for the current climate scenario
+      ## choose dates for the current climate scenario
       if (climates[cl] == "base") {
 
-        stDate = "01/01/1971"
-        enDate = "01/01/2000"
+        stDate <- "01/01/1971"
+        enDate <- "01/01/2000"
 
       } else {
 
-        stDate = "01/01/2069"
-        enDate = "01/01/2099"
+        stDate <- "01/01/2069"
+        enDate <- "01/01/2099"
       }
 
-      # change scenario
+      ## change scenario
       lapply(nodesStDate, function(n) {
-        xmlValue(n) = stDate
+        xmlValue(n) <- stDate
       })
       lapply(nodesEnDate, function(n) {
-        xmlValue(n) = enDate
+        xmlValue(n) <- enDate
       })
 
-      # # Loop through met file names to create one .sim file for each met
-      # file
+      ## Loop through met file names to create one .sim file for each met file
       for (i in seq_along(metFiles)) {
         # for(i in 1:10) { # For testing get file name from each met and
-        # creates file names and attributes to change in new XML files
-        metName = metFiles[i]
-        splitName = unlist(strsplit(metFiles[i], "[.]"))
-        # simName = paste(splitName[1],'.sim', sep = '')
-        gridName = splitName[1]
-        outName = paste(gridName, "_", climates[cl], "_", soils,
+        ## creates file names and attributes to change in new XML files
+        metName   <- metFiles[i]
+        splitName <- unlist(strsplit(metFiles[i], "[.]"))
+        # simName <- paste(splitName[1],'.sim', sep = '')
+        gridName  <- splitName[1]
+        outName   <- paste(gridName, "_", climates[cl], "_", soils,
                         "_", cultivars[cv], ".out", sep = "")
 
-        # change attribute name of simulation
-        xmlAttrs(simNameRoot) = c(name = splitName[1])
+        ## change attribute name of simulation
+        xmlAttrs(simNameRoot) <- c(name = splitName[1])
 
-        # find address to point out to right met files
-        newMetNode = paste(metFolder, metName, sep = "")
+        ## find address to point out to right met files
+        newMetNode <- file.path(metFolder, metName)
 
-        # change met location
+        ## change met location
         lapply(nodesMet, function(n) {
-          xmlValue(n) = newMetNode
+          xmlValue(n) <- newMetNode
         })
 
-        # change outfile name
+        ## change outfile name
         lapply(nodesOut, function(n) {
-          xmlValue(n) = outName
+          xmlValue(n) <- outName
         })
 
-        # FIXME: identation of saved XML file is corrupted when it has text
-        # but no problem with functionality
-        saveXML(doc, file = paste(simFolder, gridName, "_",
-                                  climates[cl], "_", soils, "_", cultivars[cv], ".sim",
-                                  sep = ""), indent = TRUE)
+        ## FIXME: indentation of saved XML file is corrupted when it has text
+        ## but no problem with functionality
+        saveXML(doc, file = file.path(simFolder, paste0(gridName, "_",
+                                  climates[cl], "_", soils, "_", cultivars[cv], ".sim"))
+                                  , indent = TRUE)
 
-      }  # END MET FILES
-    }  # END LOOP CULTIVARS
-  }  # END LOOP CLIMATES
-}  # END LOOP SOIL TYPES
+      } ## END MET FILES
+    }   ## END LOOP CULTIVARS
+  }     ## END LOOP CLIMATES
+}       ## END LOOP SOIL TYPES
